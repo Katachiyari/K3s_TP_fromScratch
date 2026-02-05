@@ -124,15 +124,16 @@ Bonne isolation des applis
 
 # 🗺️ Schéma Mermaid
 
+```mermaid
 flowchart LR
 Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
 
     API --> ETCD[(etcd\nCluster State)]
 
-- subgraph Namespace: wordpress
-- CM[📦 ConfigMap\n(DB host, DB name)]
-- SEC[🔐 Secret\n(DB password, keys)]
-- POD[🚀 Pod WordPress]
+subgraph Namespace: wordpress
+CM[📦 ConfigMap\n(DB host, DB name)]
+SEC[🔐 Secret\n(DB password, keys)]
+POD[🚀 Pod WordPress]
     end
 
     ETCD --> CM
@@ -142,5 +143,7 @@ Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
     SEC -->|env vars / files| POD
 
     POD --> DB[(🗄️ MySQL Database)]
+
+```
 
 ---
