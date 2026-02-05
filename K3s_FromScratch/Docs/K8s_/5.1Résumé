@@ -1,145 +1,203 @@
-🧠 Résumé pédagogique — Chapitres 1 à 5 Kubernetes (Upstream)
+Tu as 100 % raison 👍
+👉 Ce fichier n’est PAS du Markdown valide, même s’il ressemble visuellement à de la doc.
+
+Je vais faire 3 choses très clairement :
+
+1. ❌ T’expliquer pourquoi GitHub ne le rend pas correctement
+
+
+2. ✅ T’expliquer les règles Markdown que tu enfreins
+
+
+3. ✅ Te donner la version Markdown CORRECTE, prête à coller sur GitHub
+
+
 
 
 ---
+
+❌ Pourquoi ce fichier n’est PAS du Markdown
+
+GitHub (CommonMark) n’interprète pas :
+
+1️⃣ Les titres sans #
+
+Exemple incorrect :
 
 ☸️ Chapitre 1 — Introduction à Kubernetes
 
+➡️ GitHub voit ça comme du texte normal, pas un titre.
+
+
+---
+
+2️⃣ Les séparateurs --- utilisés n’importe où
+
+--- est valide seulement :
+
+après une ligne vide
+
+et hors bloc de code
+
+
+Sinon ➜ rendu incohérent.
+
+
+---
+
+3️⃣ Les tableaux écrits “en texte”
+
+Exemple incorrect :
+
+Élément Rôle
+Control Plane   Orchestration
+Workers Exécution des Pods
+
+➡️ Ce n’est PAS un tableau Markdown.
+
+
+---
+
+4️⃣ Le YAML sans bloc de code
+
+Exemple incorrect :
+
+apiVersion: apps/v1
+kind: Deployment
+
+➡️ GitHub l’affiche comme du texte plat.
+
+
+---
+
+5️⃣ Les commandes shell sans ```bash
+
+Même problème pour kubectl apply.
+
+
+---
+
+✅ Règles Markdown GitHub à respecter (résumé)
+
+Élément	Règle
+
+Titre	#, ##, ###
+Séparateur	--- entouré de lignes vides
+Tableau	`
+Code	```lang
+YAML	```yaml
+Commandes	```bash
+
+
+
+---
+
+✅ VERSION MARKDOWN CORRECTE (GitHub-ready)
+
+👉 Tu peux copier-coller TEL QUEL dans ton .md
+
+# 🧠 Résumé pédagogique — Chapitres 1 à 5 Kubernetes (Upstream)
+
+---
+
+## ☸️ Chapitre 1 — Introduction à Kubernetes
+
 Kubernetes est une plateforme d’orchestration de conteneurs permettant :
 
-Déploiement d’applications conteneurisées
+- Déploiement d’applications conteneurisées
+- Haute disponibilité
+- Scalabilité automatique
+- Auto-réparation
+- Gestion du réseau et du stockage
 
-Haute disponibilité
-
-Scalabilité automatique
-
-Auto-réparation
-
-Gestion réseau et stockage
-
-
-👉 Kubernetes gère l’état désiré de l’infrastructure applicative.
-
+👉 Kubernetes gère **l’état désiré** de l’infrastructure applicative.
 
 ---
 
-🏗️ Chapitre 2 — Installation d’un cluster Kubernetes
+## 🏗️ Chapitre 2 — Installation d’un cluster Kubernetes
 
-Un cluster se compose de :
+Un cluster Kubernetes se compose de :
 
-Élément	Rôle
+| Élément        | Rôle                         |
+|---------------|------------------------------|
+| Control Plane | Orchestration                |
+| Workers       | Exécution des Pods           |
+| etcd          | Base de données du cluster   |
+| CNI           | Réseau des Pods              |
 
-Control Plane	Orchestration
-Workers	Exécution des Pods
-etcd	Base de données du cluster
-CNI	Réseau des Pods
+### Installation standard (kubeadm)
 
-
-Installation standard via kubeadm :
-
-1. Installer containerd
-
-
-2. Installer kubelet, kubeadm, kubectl
-
-
+1. Installer le runtime de conteneurs (containerd)
+2. Installer `kubelet`, `kubeadm`, `kubectl`
 3. Initialiser le cluster
-
-
-4. Installer un plugin réseau
-
-
-5. Ajouter des workers
-
-
-
+4. Installer un plugin réseau (CNI)
+5. Ajouter les workers
 
 ---
 
-📦 Chapitre 3 — Pods et Deployments
+## 📦 Chapitre 3 — Pods et Deployments
 
-Objet	Rôle
+| Objet        | Rôle                                  |
+|-------------|----------------------------------------|
+| Pod         | Unité d’exécution                      |
+| ReplicaSet  | Maintient le nombre de Pods            |
+| Deployment  | Gestion complète des applications      |
 
-Pod	Unité d’exécution
-ReplicaSet	Maintient le nombre de Pods
-Deployment	Gestion complète des applications
+Un **Deployment** permet :
 
-
-Un Deployment permet :
-
-réplication
-
-rolling updates
-
-rollback
-
-auto-healing
-
-
+- la réplication
+- les rolling updates
+- le rollback
+- l’auto-healing
 
 ---
 
-🌐 Chapitre 4 — Services (réseau interne)
+## 🌐 Chapitre 4 — Services (réseau interne)
 
-Les Pods ont une IP éphémère → on utilise un Service.
+Les Pods ont une IP éphémère → on utilise un **Service**.
 
-Type	Usage
+| Type          | Usage                    |
+|---------------|--------------------------|
+| ClusterIP     | Communication interne    |
+| NodePort      | Exposition simple        |
+| LoadBalancer  | Environnement cloud      |
+| ExternalName  | Alias DNS                |
 
-ClusterIP	Communication interne
-NodePort	Exposition simple
-LoadBalancer	Cloud
-ExternalName	Alias DNS
+Un Service fournit :
 
-
-Le Service fournit :
-
-IP stable
-
-DNS
-
-Load balancing
-
-
+- une IP stable
+- un DNS interne
+- du load balancing
 
 ---
 
-🌍 Chapitre 5 — Ingress (exposition HTTP)
+## 🌍 Chapitre 5 — Ingress (exposition HTTP)
 
 L’Ingress permet :
 
-Routage HTTP par host/path
+- le routage HTTP par host / path
+- la terminaison TLS
+- la mutualisation d’une IP publique
 
-TLS
-
-Mutualisation d’une IP publique
-
-
-Architecture :
+### Architecture logique
 
 Client → Ingress Controller → Service → Pods
 
+---
+
+## 🧪 Exemple minimal complet — Déployer et exposer une application
+
+Nous utilisons les **3 objets minimum** :
+
+1. Deployment  
+2. Service  
+3. Ingress  
 
 ---
 
-🧪 Exemple minimal complet — Déployer et exposer une application
+### 📁 1️⃣ `deployment.yaml`
 
-Nous avons maintenant les objets minimum :
-
-1. Deployment
-
-
-2. Service
-
-
-3. Ingress
-
-
-
-
----
-
-📁 1️⃣ deployment.yaml
-
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -155,10 +213,10 @@ spec:
         app: demo-web
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
 
 
 ---
@@ -173,8 +231,8 @@ spec:
   selector:
     app: demo-web
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
   type: ClusterIP
 
 
@@ -188,16 +246,16 @@ metadata:
   name: demo-web-ingress
 spec:
   rules:
-  - host: demo.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: demo-web-service
-            port:
-              number: 80
+    - host: demo.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-web-service
+                port:
+                  number: 80
 
 
 ---
@@ -222,11 +280,11 @@ kubectl get ingress
 
 🌐 Test
 
-Ajoute dans ton /etc/hosts :
+Ajouter dans /etc/hosts :
 
 IP_INGRESS demo.local
 
-Puis ouvre :
+Puis ouvrir :
 
 http://demo.local
 
@@ -238,10 +296,14 @@ http://demo.local
 Avec seulement 3 fichiers YAML, tu sais maintenant :
 
 ✅ Déployer une application
+
 ✅ Lui donner un accès réseau stable
+
 ✅ L’exposer en HTTP avec routage
 
-👉 C’est le socle fondamental Kubernetes.
 
+👉 C’est le socle fondamental de Kubernetes.
 
 ---
+
+
