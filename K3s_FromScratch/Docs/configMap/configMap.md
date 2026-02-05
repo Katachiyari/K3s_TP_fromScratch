@@ -1,6 +1,5 @@
 Voici un résumé clair, pédagogique et prêt pour ton GitHub 📘
 
-
 ---
 
 🧩 ConfigMap & Secret dans Kubernetes (Exemple : WordPress)
@@ -19,9 +18,7 @@ Mot de passe DB
 
 Clés, tokens, certificats…
 
-
 👉 On sépare ces informations du code de l’application.
-
 
 ---
 
@@ -35,19 +32,16 @@ Fichiers de configuration
 
 Paramètres applicatifs
 
-
 🔓 Pas chiffré
 ➡ Stocké en clair (texte) dans etcd
 
 🧠 Exemple WordPress
 
-Variable	Rôle
+Variable Rôle
 
-WORDPRESS_DB_HOST	Adresse du serveur MySQL
-WORDPRESS_DB_NAME	Nom de la base
-WORDPRESS_TABLE_PREFIX	Préfixe des tables
-
-
+WORDPRESS_DB_HOST Adresse du serveur MySQL
+WORDPRESS_DB_NAME Nom de la base
+WORDPRESS_TABLE_PREFIX Préfixe des tables
 
 ---
 
@@ -63,20 +57,17 @@ Certificats
 
 Tokens
 
-
 ⚠ Encodé en Base64
 ➡ Ce n’est PAS du chiffrement, juste de l’encodage
 ➡ Aussi stocké dans etcd
 
 🧠 Exemple WordPress
 
-Variable	Rôle
+Variable Rôle
 
-WORDPRESS_DB_PASSWORD	Mot de passe MySQL
-AUTH_KEY	Clé de sécurité WordPress
-JWT_SECRET	Token d’authentification
-
-
+WORDPRESS_DB_PASSWORD Mot de passe MySQL
+AUTH_KEY Clé de sécurité WordPress
+JWT_SECRET Token d’authentification
 
 ---
 
@@ -88,18 +79,14 @@ Comme variables d’environnement
 
 Ou comme fichiers montés dans le conteneur
 
-
-
 ---
 
 🧠 Résumé simple
 
-Objet	Contenu	Sécurité	Usage
+Objet Contenu Sécurité Usage
 
-ConfigMap	Paramètres non sensibles	🔓 Clair	Config appli
-Secret	Données sensibles	🔐 Base64 (pas chiffré)	Passwords, clés
-
-
+ConfigMap Paramètres non sensibles 🔓 Clair Config appli
+Secret Données sensibles 🔐 Base64 (pas chiffré) Passwords, clés
 
 ---
 
@@ -110,7 +97,6 @@ Secret	Données sensibles	🔐 Base64 (pas chiffré)	Passwords, clés
 RBAC strict (droits minimum)
 
 Namespace isolé par application
-
 
 🛡 Aller plus loin :
 
@@ -124,9 +110,6 @@ External Secrets Operator
 
 AWS/GCP Secret Manager
 
-
-
-
 ---
 
 📍 Portée
@@ -139,14 +122,12 @@ wordpress ne peut pas lire ceux de nginx
 
 Bonne isolation des applis
 
-
-
 ---
 
 🗺️ Schéma Mermaid
 
 flowchart LR
-    Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
+Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
 
     API --> ETCD[(etcd\nCluster State)]
 
@@ -164,6 +145,4 @@ flowchart LR
 
     POD --> DB[(🗄️ MySQL Database)]
 
-
 ---
-

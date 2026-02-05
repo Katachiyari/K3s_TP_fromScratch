@@ -1,8 +1,8 @@
 flowchart TB
-  %% 🎯 Objectif : séparer config non sensible et secrets pour WordPress
+%% 🎯 Objectif : séparer config non sensible et secrets pour WordPress
 
-  subgraph K8S["☸️ Cluster Kubernetes"]
-    direction TB
+subgraph K8S["☸️ Cluster Kubernetes"]
+direction TB
 
     subgraph NS["📁 Namespace: wordpress"]
       direction TB
@@ -27,7 +27,8 @@ flowchart TB
     ETCD --> CM
     ETCD --> SEC
     ETCD --> DEP
-  end
 
-  DEV["👨‍💻 Ubuntu (kubectl)"] -->|"kubectl apply -f *.yaml"| API
-  POD -->|"Connexion DB"| DB["🗄️ Base de données (MySQL/MariaDB)"]
+end
+
+DEV["👨‍💻 Ubuntu (kubectl)"] -->|"kubectl apply -f \*.yaml"| API
+POD -->|"Connexion DB"| DB["🗄️ Base de données (MySQL/MariaDB)"]
