@@ -2,9 +2,9 @@ Voici un résumé clair, pédagogique et prêt pour ton GitHub 📘
 
 ---
 
-🧩 ConfigMap & Secret dans Kubernetes (Exemple : WordPress)
+# 🧩 ConfigMap & Secret dans Kubernetes (Exemple : WordPress)
 
-🎯 Pourquoi on utilise ConfigMap et Secret ?
+# 🎯 Pourquoi on utilise ConfigMap et Secret ?
 
 Quand ton application WordPress tourne dans un Pod, elle a besoin de paramètres :
 
@@ -22,56 +22,53 @@ Clés, tokens, certificats…
 
 ---
 
-🗂️ 1️⃣ ConfigMap = Variables non sensibles
+# 🗂️ 1️⃣ ConfigMap = Variables non sensibles
 
 📦 Sert à stocker :
 
-Variables d’environnement
-
-Fichiers de configuration
-
-Paramètres applicatifs
+- Variables d'environnement
+- Fichiers de configuration
+- Paramètres applicatifs
 
 🔓 Pas chiffré
 ➡ Stocké en clair (texte) dans etcd
 
-🧠 Exemple WordPress
+# 🧠 Exemple WordPress
 
-Variable Rôle
+| Variable | Rôle |
+|----------|------|
+| WORDPRESS_DB_HOST | Adresse du serveur MySQL |
+| WORDPRESS_DB_NAME | Nom de la base |
+| WORDPRESS_TABLE_PREFIX | Préfixe des tables |
 
-WORDPRESS_DB_HOST Adresse du serveur MySQL
-WORDPRESS_DB_NAME Nom de la base
-WORDPRESS_TABLE_PREFIX Préfixe des tables
 
 ---
 
-🔐 2️⃣ Secret = Variables sensibles
+# 🔐 2️⃣ Secret = Variables sensibles
 
 🔒 Sert à stocker :
 
-Mots de passe
+- Mots de passe
+- Clés API
+- Certificats
+- Tokens
 
-Clés API
+- ⚠ Encodé en Base64
+- ➡ Ce n’est PAS du chiffrement, juste de l’encodage
+- ➡ Aussi stocké dans etcd
 
-Certificats
+# 🧠 Exemple WordPress
 
-Tokens
+| Variable | Rôle |
+|----------|------|
+| WORDPRESS_DB_PASSWORD | Mot de passe MySQL |
+| AUTH_KEY | Clé de sécurité WordPress |
+| JWT_SECRET | Token d’authentification |
 
-⚠ Encodé en Base64
-➡ Ce n’est PAS du chiffrement, juste de l’encodage
-➡ Aussi stocké dans etcd
-
-🧠 Exemple WordPress
-
-Variable Rôle
-
-WORDPRESS_DB_PASSWORD Mot de passe MySQL
-AUTH_KEY Clé de sécurité WordPress
-JWT_SECRET Token d’authentification
 
 ---
 
-⚙️ Comment WordPress les utilise ?
+# ⚙️ Comment WordPress les utilise ?
 
 Le Pod WordPress lit ces valeurs :
 
@@ -81,18 +78,19 @@ Ou comme fichiers montés dans le conteneur
 
 ---
 
-🧠 Résumé simple
+# 🧠 Résumé simple
 
-Objet Contenu Sécurité Usage
+| Objet | Contenu Sécurité Usage |
+|-------|------------------------|
+| ConfigMap | Paramètres non sensibles 🔓 Clair Config appli |
+| Secret | Données sensibles 🔐 Base64 (pas chiffré) Passwords, clés |
 
-ConfigMap Paramètres non sensibles 🔓 Clair Config appli
-Secret Données sensibles 🔐 Base64 (pas chiffré) Passwords, clés
 
 ---
 
-🏭 Bonnes pratiques Production
+# 🏭 Bonnes pratiques Production
 
-🔐 Sécuriser l’accès :
+# 🔐 Sécuriser l’accès :
 
 RBAC strict (droits minimum)
 
@@ -112,7 +110,7 @@ AWS/GCP Secret Manager
 
 ---
 
-📍 Portée
+# 📍 Portée
 
 Un ConfigMap ou Secret est accessible uniquement dans SON namespace
 
@@ -124,17 +122,18 @@ Bonne isolation des applis
 
 ---
 
-🗺️ Schéma Mermaid
+# 🗺️ Schéma Mermaid
 
+```mermaid
 flowchart LR
 Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
 
     API --> ETCD[(etcd\nCluster State)]
 
-    subgraph Namespace: wordpress
-        CM[📦 ConfigMap\n(DB host, DB name)]
-        SEC[🔐 Secret\n(DB password, keys)]
-        POD[🚀 Pod WordPress]
+subgraph Namespace: wordpress
+CM[📦 ConfigMap\n(DB host, DB name)]
+SEC[🔐 Secret\n(DB password, keys)]
+POD[🚀 Pod WordPress]
     end
 
     ETCD --> CM
@@ -144,5 +143,7 @@ Dev[👨‍💻 DevOps] -->|kubectl apply| API[Kubernetes API]
     SEC -->|env vars / files| POD
 
     POD --> DB[(🗄️ MySQL Database)]
+
+```
 
 ---

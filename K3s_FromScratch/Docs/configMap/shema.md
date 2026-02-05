@@ -1,3 +1,4 @@
+```mermaid
 flowchart TB
 %% 🎯 Objectif : séparer config non sensible et secrets pour WordPress
 
@@ -20,7 +21,7 @@ direction TB
       DEP --> RS --> POD
     end
 
-    ETCD[("🗄️ etcd\n(stockage de l’état des objets)")]
+    ETCD[("🗄️ etcd\n(stockage de l'état des objets)")]
     API["🧠 API Server"]
 
     API --> ETCD
@@ -32,3 +33,4 @@ end
 
 DEV["👨‍💻 Ubuntu (kubectl)"] -->|"kubectl apply -f \*.yaml"| API
 POD -->|"Connexion DB"| DB["🗄️ Base de données (MySQL/MariaDB)"]
+```
