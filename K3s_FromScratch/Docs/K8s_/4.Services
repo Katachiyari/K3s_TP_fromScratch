@@ -310,6 +310,3 @@ flowchart LR
 
 
 ---
-
-Si tu veux, je fais le Chapitre 5 (Ingress) dans le même niveau de profondeur, avec :
-✅ règles host/path, TLS, controller, différences NodePort/LB/Ingress, commandes de debug, et un TP complet.

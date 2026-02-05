@@ -1,10 +1,3 @@
-Parfait.
-On attaque 🧪 Incidents réels, méthode opérateur PROD, pas de théorie inutile.
-👉 Incident #1 (le plus fréquent et le plus bloquant)
-
-
----
-
 🧪 Incident réel #1 — PVC bloqué en Pending
 
 🎯 Contexte réel
@@ -204,5 +197,3 @@ CSI = critique	Sans lui, rien
 
 👉 Incident #4 — Application OK mais inaccessible
 (NetworkPolicy / DNS)
-
-Dis-moi lequel on traite en priorité.
