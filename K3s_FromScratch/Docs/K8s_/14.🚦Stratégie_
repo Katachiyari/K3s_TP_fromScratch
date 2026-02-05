@@ -1,0 +1,258 @@
+Parfait 👍 on continue strictement dans la continuité du livre + doc officielle, niveau production avancée.
+
+
+---
+
+📘 Cours Kubernetes (Upstream) — Chapitre 14
+
+🚦 Stratégies de déploiement avancées
+
+
+---
+
+🎯 Objectifs pédagogiques
+
+À la fin de ce chapitre, tu sauras :
+
+Comprendre les différentes stratégies de déploiement
+
+Choisir la bonne stratégie selon le contexte
+
+Implémenter ces stratégies avec Deployment, Service et Ingress
+
+Réduire le risque lors des mises en production
+
+
+
+---
+
+🧠 1. Le problème des mises à jour en production
+
+Mettre à jour une application en production implique des risques :
+
+indisponibilité
+
+régression fonctionnelle
+
+impact utilisateur
+
+
+👉 Kubernetes fournit des mécanismes natifs pour contrôler ces mises à jour dans Kubernetes.
+
+
+---
+
+🔁 2. Rolling Update (stratégie par défaut)
+
+Principe
+
+Les Pods sont remplacés progressivement.
+
+Ancienne version ↓
+Nouvelle version ↑
+
+Avantages
+
+Pas (ou peu) d’indisponibilité
+
+Simple à mettre en œuvre
+
+
+Inconvénients
+
+Ancienne et nouvelle versions cohabitent
+
+Risque si incompatibilité (DB, API)
+
+
+
+---
+
+⚙️ Configuration Rolling Update
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+Paramètres clés
+
+maxUnavailable : Pods indisponibles autorisés
+
+maxSurge : Pods supplémentaires temporaires
+
+
+
+---
+
+🧪 Commandes utiles
+
+kubectl rollout status deploy my-app
+kubectl rollout history deploy my-app
+kubectl rollout undo deploy my-app
+
+
+---
+
+🔵 3. Blue / Green Deployment
+
+Principe
+
+Deux environnements identiques :
+
+Blue → version actuelle
+
+Green → nouvelle version
+
+
+Le trafic est basculé d’un coup.
+
+
+---
+
+🧩 Implémentation Kubernetes
+
+2 Deployments (blue / green)
+
+1 Service
+
+Changement du selector du Service
+
+
+selector:
+  version: green
+
+Avantages
+
+Rollback immédiat
+
+Pas de mélange de versions
+
+
+Inconvénients
+
+Double consommation de ressources
+
+
+
+---
+
+🟡 4. Canary Deployment
+
+Principe
+
+La nouvelle version reçoit une petite partie du trafic.
+
+90% → v1
+10% → v2
+
+Si tout va bien → montée progressive.
+
+
+---
+
+🧩 Implémentation simple
+
+2 Deployments (v1 / v2)
+
+Même Service
+
+Répartition basée sur le nombre de Pods
+
+
+Exemple :
+
+v1 : 9 replicas
+
+v2 : 1 replica
+
+
+
+---
+
+⚠️ Limites natives Kubernetes
+
+Kubernetes ne gère pas :
+
+le pourcentage exact de trafic HTTP
+
+les règles complexes (headers, users…)
+
+
+👉 Pour un Canary avancé → Ingress Controller / Service Mesh
+
+
+---
+
+🧠 5. Choisir la bonne stratégie
+
+Contexte	Stratégie
+
+Mise à jour simple	Rolling Update
+Zéro risque	Blue / Green
+Tests progressifs	Canary
+Microservices critiques	Canary + métriques
+
+
+
+---
+
+🧪 6. Bonnes pratiques production
+
+Bonne pratique	Pourquoi
+
+Readiness Probes	Éviter trafic prématuré
+Liveness Probes	Détection crash
+Metrics	Décision Canary
+Rollback automatisé	Réduction MTTR
+GitOps	Déploiement contrôlé
+
+
+
+---
+
+🧩 7. Rôle de GitOps et Helm
+
+Helm gère les versions
+
+GitOps orchestre les déploiements
+
+Les stratégies sont décrites dans Git
+
+
+👉 Pas de clics, pas de kubectl manuel
+
+
+---
+
+📌 Résumé du chapitre
+
+Stratégie	Usage
+
+Rolling Update	Standard
+Blue / Green	Zéro risque
+Canary	Validation progressive
+
+
+
+---
+
+🎓 À retenir
+
+> Une mise en production n’est pas un événement,
+c’est un processus contrôlé.
+
+
+
+Kubernetes fournit les briques,
+l’architecture et la discipline font le reste.
+
+
+---
+
+🔜 Chapitre suivant
+
+🧭 Architecture GitOps avancée
+➡️ Argo CD / Flux
+➡️ Réconciliation continue

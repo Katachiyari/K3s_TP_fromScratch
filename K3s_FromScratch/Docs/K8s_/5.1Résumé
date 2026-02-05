@@ -1,0 +1,258 @@
+Parfait — on consolide les 5 premiers chapitres et on termine par un exemple complet minimal prêt à déployer 🚀
+
+
+---
+
+🧠 Résumé pédagogique — Chapitres 1 à 5 Kubernetes (Upstream)
+
+
+---
+
+☸️ Chapitre 1 — Introduction à Kubernetes
+
+Kubernetes est une plateforme d’orchestration de conteneurs permettant :
+
+Déploiement d’applications conteneurisées
+
+Haute disponibilité
+
+Scalabilité automatique
+
+Auto-réparation
+
+Gestion réseau et stockage
+
+
+👉 Kubernetes gère l’état désiré de l’infrastructure applicative.
+
+
+---
+
+🏗️ Chapitre 2 — Installation d’un cluster Kubernetes
+
+Un cluster se compose de :
+
+Élément	Rôle
+
+Control Plane	Orchestration
+Workers	Exécution des Pods
+etcd	Base de données du cluster
+CNI	Réseau des Pods
+
+
+Installation standard via kubeadm :
+
+1. Installer containerd
+
+
+2. Installer kubelet, kubeadm, kubectl
+
+
+3. Initialiser le cluster
+
+
+4. Installer un plugin réseau
+
+
+5. Ajouter des workers
+
+
+
+
+---
+
+📦 Chapitre 3 — Pods et Deployments
+
+Objet	Rôle
+
+Pod	Unité d’exécution
+ReplicaSet	Maintient le nombre de Pods
+Deployment	Gestion complète des applications
+
+
+Un Deployment permet :
+
+réplication
+
+rolling updates
+
+rollback
+
+auto-healing
+
+
+
+---
+
+🌐 Chapitre 4 — Services (réseau interne)
+
+Les Pods ont une IP éphémère → on utilise un Service.
+
+Type	Usage
+
+ClusterIP	Communication interne
+NodePort	Exposition simple
+LoadBalancer	Cloud
+ExternalName	Alias DNS
+
+
+Le Service fournit :
+
+IP stable
+
+DNS
+
+Load balancing
+
+
+
+---
+
+🌍 Chapitre 5 — Ingress (exposition HTTP)
+
+L’Ingress permet :
+
+Routage HTTP par host/path
+
+TLS
+
+Mutualisation d’une IP publique
+
+
+Architecture :
+
+Client → Ingress Controller → Service → Pods
+
+
+---
+
+🧪 Exemple minimal complet — Déployer et exposer une application
+
+Nous avons maintenant les objets minimum :
+
+1. Deployment
+
+
+2. Service
+
+
+3. Ingress
+
+
+
+
+---
+
+📁 1️⃣ deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-web
+  template:
+    metadata:
+      labels:
+        app: demo-web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+---
+
+📁 2️⃣ service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-web-service
+spec:
+  selector:
+    app: demo-web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+
+---
+
+📁 3️⃣ ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-web-ingress
+spec:
+  rules:
+  - host: demo.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-web-service
+            port:
+              number: 80
+
+
+---
+
+🚀 Déploiement
+
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+
+
+---
+
+🔍 Vérifications
+
+kubectl get pods
+kubectl get svc
+kubectl get ingress
+
+
+---
+
+🌐 Test
+
+Ajoute dans ton /etc/hosts :
+
+IP_INGRESS demo.local
+
+Puis ouvre :
+
+http://demo.local
+
+
+---
+
+🎯 Conclusion pédagogique
+
+Avec seulement 3 fichiers YAML, tu sais maintenant :
+
+✅ Déployer une application
+✅ Lui donner un accès réseau stable
+✅ L’exposer en HTTP avec routage
+
+👉 C’est le socle fondamental Kubernetes.
+
+
+---
+
+Si tu veux, je peux maintenant faire :
+
+📘 Chapitre 6 — ConfigMaps & Secrets
+ou
+📄 Générer une version PDF de ces 5 chapitres

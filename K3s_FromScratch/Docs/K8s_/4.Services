@@ -1,0 +1,315 @@
+📘 Cours Kubernetes (Upstream) — Chapitre 4
+
+🌐 Réseau Kubernetes & objet Service
+
+> 📌 Sources cadrées : le livre ENI (fil conducteur)  + documentation officielle Kubernetes (Services, DNS, kube-proxy, Ingress, Endpoints/EndpointSlices). 
+
+
+
+
+---
+
+🎯 Objectifs pédagogiques
+
+À la fin de ce chapitre, tu sais :
+
+✅ Pourquoi l’IP d’un Pod n’est pas un endpoint fiable
+
+✅ Ce qu’apporte un Service (IP virtuelle + DNS + load-balancing L4)
+
+✅ Comment Kubernetes route le trafic (Endpoints / EndpointSlices + kube-proxy)
+
+✅ Choisir entre ClusterIP / NodePort / LoadBalancer / ExternalName
+
+✅ Tester, diagnostiquer et corriger (DNS, selectors, endpoints, ports)
+
+
+
+---
+
+🧠 1) Modèle réseau Kubernetes (rappel crucial)
+
+Kubernetes impose un modèle réseau “plat” :
+
+🧩 Chaque Pod a sa propre IP
+
+🔁 Les Pods peuvent être recréés → IP qui change
+
+🌍 La connectivité Pod↔Pod est assurée par le CNI (plugin réseau)
+
+
+📌 Conséquence : ne jamais dépendre d’une IP de Pod pour consommer une app.
+
+
+---
+
+❓ 2) Pourquoi un Pod n’est pas “exposable” directement
+
+Un Pod est éphémère :
+
+crash → recréation
+
+rescheduling → changement de node
+
+rolling update → remplacement par d’autres Pods
+
+
+👉 Il faut un point d’entrée stable → Service.
+
+
+---
+
+🔌 3) Service : définition et rôle exact
+
+Un Service est un objet Kubernetes qui expose une application (un ou plusieurs Pods) derrière :
+
+🧷 une IP virtuelle stable (ClusterIP)
+
+🧭 un nom DNS stable
+
+⚖️ une répartition de charge L4 (TCP/UDP/SCTP)
+
+
+Kubernetes : “A Service is a method for exposing a network application that is running as one or more Pods…” 
+
+
+---
+
+🧲 4) Le cœur du Service : labels + selector
+
+Un Service ne cible pas “un pod par nom”. Il cible un ensemble de Pods via un selector :
+
+spec:
+  selector:
+    app: api
+
+➡️ Tout Pod portant app=api devient backend du Service.
+
+✅ Commandes utiles
+
+kubectl get pods --show-labels
+kubectl describe svc <service-name>
+
+
+---
+
+📍 5) Endpoints vs EndpointSlices : qui reçoit le trafic ?
+
+Quand tu crées un Service, Kubernetes maintient la liste des backends via :
+
+Endpoints (historique)
+
+EndpointSlices (plus scalable) 
+
+
+🔎 Voir la vérité terrain
+
+kubectl get endpoints
+kubectl get endpointslices -A
+
+➡️ Si ton Service ne route rien, 80% du temps : Endpoints vides (selector incorrect, labels absents, pods non Ready).
+
+
+---
+
+🚦 6) kube-proxy : comment le trafic est “magiquement” routé ?
+
+kube-proxy tourne sur chaque node et reflète l’état Services + Endpoints en règles réseau (iptables / IPVS). 
+
+👉 Le Service est une abstraction ; la “mécanique” de routage est réalisée via ces règles kernel.
+
+
+---
+
+🧱 7) Les types de Service (choix d’architecture)
+
+🟦 A) ClusterIP (par défaut) — interne cluster
+
+✅ microservices internes
+
+✅ DB interne (avec précautions)
+
+❌ pas accessible de l’extérieur
+
+
+Doc Service + ClusterIP 
+
+
+---
+
+🟧 B) NodePort — expose un port sur chaque node
+
+Accessible via NodeIP:NodePort
+
+Simple pour lab / dépannage
+
+Moins clean en prod (gestion ports, surface d’expo)
+
+
+Résumé officiel (NodePort) 
+
+
+---
+
+🟩 C) LoadBalancer — cloud / LB externe
+
+Provisionne un load balancer via intégration infra (cloud provider)
+
+Recommandé côté cloud managé
+
+
+Doc LB externe 
+
+
+---
+
+🟪 D) ExternalName — alias DNS externe
+
+Pas de proxy, juste un CNAME
+
+Utile pour exposer une dépendance externe “comme un service”
+
+
+Doc Service (ExternalName) 
+
+
+---
+
+🧪 8) Mise en application (TP guidé) — “API + Client”
+
+> 🎓 Objectif : prouver DNS + Service + load-balancing
+
+
+
+Étape 1 — Namespace
+
+kubectl create ns demo-net
+
+Étape 2 — Déployer une API (3 replicas)
+
+kubectl -n demo-net create deploy api --image=nginx --replicas=3
+kubectl -n demo-net label deploy api app=api
+
+Étape 3 — Créer un Service ClusterIP
+
+kubectl -n demo-net expose deploy api --port=80 --target-port=80 --name=api-svc
+
+(kubectl expose est documenté officiellement. )
+
+Étape 4 — Vérifier Service + Endpoints
+
+kubectl -n demo-net get svc api-svc -o wide
+kubectl -n demo-net get endpoints api-svc -o wide
+kubectl -n demo-net get pods -l app=api -o wide
+
+✅ Tu dois voir des endpoints correspondant aux IP des Pods.
+
+
+---
+
+🧪 9) Test DNS & connectivité (comme en prod)
+
+Option A — Créer un “pod outils” et tester
+
+kubectl -n demo-net run dnsutils --image=registry.k8s.io/e2e-test-images/jessie-dnsutils:1.3 --command -- sleep 3600
+kubectl -n demo-net exec -it dnsutils -- nslookup api-svc
+kubectl -n demo-net exec -it dnsutils -- curl -I http://api-svc
+
+⚠️ Piège classique : namespace
+
+Une requête DNS sans namespace cherche d’abord dans le namespace du pod. 
+Ex :
+
+kubectl -n demo-net exec -it dnsutils -- nslookup api-svc.demo-net
+
+Doc DNS officielle 
+
+
+---
+
+🧩 10) Débogage : “mon Service ne marche pas”
+
+✅ Checklist “5 commandes”
+
+1. Pods prêts ?
+
+
+
+kubectl -n demo-net get pods
+
+2. Labels corrects ?
+
+
+
+kubectl -n demo-net get pods --show-labels
+kubectl -n demo-net describe svc api-svc
+
+3. Endpoints présents ?
+
+
+
+kubectl -n demo-net get endpoints api-svc -o yaml
+
+4. DNS OK ?
+
+
+
+kubectl -n demo-net exec -it dnsutils -- nslookup api-svc
+
+5. kube-proxy tourne ?
+
+
+
+kubectl -n kube-system get pods | grep -i proxy
+
+
+---
+
+🧭 11) Service vs Ingress (teaser chap. 5)
+
+Service = L4 (TCP/UDP), point d’accès stable vers Pods
+
+Ingress = L7 (HTTP/HTTPS), routage par host/path, TLS, etc. 
+
+
+👉 En pratique :
+
+Ingress route vers un Service
+
+Le Service route vers les Pods
+
+
+
+---
+
+🧱 Schéma Mermaid (mental model)
+
+flowchart LR
+  Client[🧑‍💻 Client (Pod)] -->|DNS: api-svc.demo-net| DNS[(🧠 CoreDNS)]
+  Client -->|TCP/80| SVC[🔌 Service ClusterIP api-svc]
+  SVC -->|Endpoints / EndpointSlices| P1[📦 Pod api-1]
+  SVC -->|Load-balance L4| P2[📦 Pod api-2]
+  SVC -->|Load-balance L4| P3[📦 Pod api-3]
+  KP[🧰 kube-proxy (iptables/IPVS)] -.programmes rules .-> SVC
+
+
+---
+
+✅ Résumé “à coller en fin de cours”
+
+📦 Pods : IP éphémères → pas un endpoint stable
+
+🔌 Service : IP stable + DNS + LB L4 vers des Pods sélectionnés par labels 
+
+📍 Endpoints/EndpointSlices : la liste réelle des backends 
+
+🧰 kube-proxy : installe les règles réseau (iptables/IPVS) 
+
+🌐 DNS interne : service.namespace.svc.cluster.local 
+
+
+
+---
+
+Si tu veux, je fais le Chapitre 5 (Ingress) dans le même niveau de profondeur, avec :
+✅ règles host/path, TLS, controller, différences NodePort/LB/Ingress, commandes de debug, et un TP complet.

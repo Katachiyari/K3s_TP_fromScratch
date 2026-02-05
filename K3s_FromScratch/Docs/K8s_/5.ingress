@@ -1,0 +1,293 @@
+📘 Cours Kubernetes (Upstream) — Chapitre 5
+
+🌍 Exposer les applications HTTP : Ingress
+
+> Continuité logique : après Pods → Deployments → Services, on ajoute maintenant une couche L7 (HTTP/HTTPS) au-dessus des Services.
+
+
+
+
+---
+
+🎯 Objectifs pédagogiques
+
+À la fin de ce chapitre tu sauras :
+
+Différence entre Service et Ingress
+
+Rôle d’un Ingress Controller
+
+Router le trafic HTTP par host et path
+
+Configurer le TLS
+
+Diagnostiquer un Ingress qui ne fonctionne pas
+
+
+
+---
+
+🧠 1. Pourquoi Ingress existe ?
+
+Un Service fonctionne en couche L4 (TCP/UDP).
+Il ne comprend pas HTTP.
+
+Problème :
+
+Tu veux exposer plusieurs applications web
+
+Tu ne veux pas ouvrir un port NodePort par application
+
+Tu veux faire du routage par nom de domaine
+
+
+👉 Solution : Ingress
+
+
+---
+
+🔀 2. Architecture Ingress
+
+Client HTTP
+     ↓
+Ingress Controller (reverse proxy)
+     ↓
+Ingress rules (host/path)
+     ↓
+Service
+     ↓
+Pods
+
+📌 Ingress ne remplace pas Service
+📌 Il route vers un Service
+
+Documentation officielle : Kubernetes – Ingress Concept
+https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+
+---
+
+⚙️ 3. L’Ingress Controller (obligatoire)
+
+Un Ingress seul ne fait rien.
+Il faut un Ingress Controller qui implémente les règles.
+
+Exemples populaires :
+
+Controller	Technologie
+
+NGINX Ingress	NGINX
+Traefik	Traefik proxy
+HAProxy Ingress	HAProxy
+
+
+Sans controller → Ingress ignoré.
+
+
+---
+
+📄 4. Structure d’un Ingress
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+spec:
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+
+
+---
+
+🌐 5. Routage par Host
+
+Tu peux router selon le domaine :
+
+Host	Destination
+
+app.example.com	Service web
+api.example.com	Service api
+
+
+Exemple :
+
+rules:
+- host: api.example.com
+  http:
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+        service:
+          name: api-service
+          port:
+            number: 80
+
+
+---
+
+🛣️ 6. Routage par Path
+
+Permet de partager un domaine :
+
+URL	Service
+
+example.com/api	api-service
+example.com/app	web-service
+
+
+paths:
+- path: /api
+  pathType: Prefix
+  backend:
+    service:
+      name: api-service
+      port:
+        number: 80
+
+
+---
+
+🔒 7. TLS avec Ingress
+
+On peut activer HTTPS :
+
+tls:
+- hosts:
+  - app.example.com
+  secretName: app-tls
+
+Le secret doit contenir :
+
+certificat
+
+clé privée
+
+
+kubectl create secret tls app-tls \
+  --cert=cert.pem \
+  --key=key.pem
+
+
+---
+
+🧪 8. Mise en application complète
+
+Étape 1 — Namespace
+
+kubectl create namespace demo-ingress
+
+
+---
+
+Étape 2 — Déploiement d’une app
+
+kubectl -n demo-ingress create deploy web --image=nginx
+kubectl -n demo-ingress expose deploy web --port=80 --name=web-service
+
+
+---
+
+Étape 3 — Créer l’Ingress
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: demo-ingress
+spec:
+  rules:
+  - host: web.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+
+kubectl apply -f ingress.yaml
+
+
+---
+
+Étape 4 — Vérification
+
+kubectl get ingress -n demo-ingress
+kubectl describe ingress web-ingress -n demo-ingress
+
+
+---
+
+🧠 9. Points clés d’architecture
+
+Élément	Rôle
+
+Service	L4 vers Pods
+Ingress	L7 HTTP routing
+Ingress Controller	Reverse proxy
+TLS Secret	Certificat HTTPS
+
+
+
+---
+
+🧩 10. Dépannage Ingress
+
+🔎 L’Ingress n’a pas d’IP ?
+
+kubectl get svc -A | grep ingress
+
+🔎 Controller absent ?
+
+kubectl get pods -A | grep ingress
+
+🔎 Mauvais service ciblé ?
+
+kubectl describe ingress <name>
+kubectl get svc
+kubectl get endpoints
+
+
+---
+
+📌 Résumé du chapitre
+
+Avant	Après
+
+Service	Accès réseau basique
+Ingress	Routage HTTP avancé
+NodePort	Accès simple
+Ingress	Multi-applications, TLS, virtual hosts
+
+
+
+---
+
+🎓 À retenir
+
+> Service = connexion réseau
+Ingress = routage web intelligent
+
+
+
+Ingress est la porte d’entrée HTTP moderne des applications Kubernetes.
+
+
+---
+
+🔜 Prochain chapitre
+
+🔐 ConfigMaps & Secrets
+⚙️ Gestion de la configuration des applications

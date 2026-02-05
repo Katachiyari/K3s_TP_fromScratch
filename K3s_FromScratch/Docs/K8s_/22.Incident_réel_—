@@ -1,0 +1,208 @@
+Parfait.
+On attaque 🧪 Incidents réels, méthode opérateur PROD, pas de théorie inutile.
+👉 Incident #1 (le plus fréquent et le plus bloquant)
+
+
+---
+
+🧪 Incident réel #1 — PVC bloqué en Pending
+
+🎯 Contexte réel
+
+L’application ne démarre pas
+
+Le Pod reste en Pending
+
+Le stockage est externe (NFS / SAN / CSI)
+
+Rien ne “crash”, mais rien n’avance
+
+
+
+---
+
+🔴 Symptôme observable
+
+kubectl get pods -n app
+
+NAME        READY   STATUS    RESTARTS
+api-app     0/1     Pending   0
+
+
+---
+
+🔎 Étape 1 — Identifier la vraie cause (réflexe n°1)
+
+👉 TOUJOURS commencer par le PVC
+
+kubectl get pvc -n app
+
+NAME      STATUS    VOLUME   CAPACITY
+app-pvc   Pending
+
+🚨 Un Pod ne démarre JAMAIS si son PVC n’est pas Bound
+
+
+---
+
+🔍 Étape 2 — Inspecter le PVC (commande clé)
+
+kubectl describe pvc app-pvc -n app
+
+Exemples de messages critiques (réels)
+
+❌ Cas A — StorageClass inexistante
+
+storageclass.storage.k8s.io "nfs-prod" not found
+
+➡️ Cause
+
+storageClassName mal orthographié
+
+StorageClass supprimée / renommée
+
+
+➡️ Correction
+
+kubectl get storageclass
+
+Corriger le YAML du PVC.
+
+
+---
+
+❌ Cas B — CSI absent ou cassé
+
+failed to provision volume with StorageClass "nfs-prod"
+no volume plugin matched
+
+➡️ Cause
+
+CSI non installé
+
+CSI crashé
+
+mauvais provisioner
+
+
+➡️ Vérification
+
+kubectl get pods -n kube-system | grep csi
+
+➡️ Correction
+
+redéployer le CSI
+
+corriger provisioner: dans la StorageClass
+
+
+
+---
+
+❌ Cas C — Backend NFS inaccessible
+
+mount.nfs: Connection timed out
+
+➡️ Cause
+
+VM NFS éteinte
+
+firewall
+
+mauvaise IP / share
+
+
+➡️ Test manuel (depuis un node)
+
+showmount -e 10.10.10.50
+
+
+---
+
+🧠 Étape 3 — Vérifier la StorageClass (souvent oublié)
+
+kubectl describe storageclass nfs-prod
+
+Points critiques :
+
+provisioner
+
+server
+
+share
+
+reclaimPolicy
+
+
+📌 Une StorageClass mal configurée = PVC bloqué à vie
+
+
+---
+
+🔁 Étape 4 — Une fois corrigé
+
+Supprimer le PVC (si safe)
+
+kubectl delete pvc app-pvc -n app
+
+Le recréer
+
+kubectl apply -f pvc.yaml
+
+Vérifier
+
+kubectl get pvc -n app
+
+STATUS = Bound ✅
+
+👉 Le Pod démarre automatiquement après.
+
+
+---
+
+🧠 Ce que cet incident t’apprend (clé PROD)
+
+Réalité	Leçon
+
+Pod bloqué	Souvent stockage
+Pending ≠ crash	Infra non prête
+PVC d’abord	Toujours
+CSI = critique	Sans lui, rien
+
+
+
+---
+
+📌 Checklist réflexe (à mémoriser)
+
+1. kubectl get pvc
+
+
+2. kubectl describe pvc
+
+
+3. kubectl get storageclass
+
+
+4. kubectl get pods -n kube-system | grep csi
+
+
+5. Tester le backend (NFS/SAN)
+
+
+
+
+---
+
+🔜 Incident suivant (au choix)
+
+👉 Incident #2 — Pod en CrashLoopBackOff
+(cas applicatif, probes, env vars, permissions)
+
+👉 Incident #3 — Ingress KO (404 / timeout)
+(routage, Service, endpoints, controller)
+
+👉 Incident #4 — Application OK mais inaccessible
+(NetworkPolicy / DNS)
+
+Dis-moi lequel on traite en priorité.
